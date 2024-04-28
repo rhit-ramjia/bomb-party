@@ -3,6 +3,8 @@ import sys
 import threading
 import random
 
+client_info = {}
+
 def Convert(str): 
     dictList = list(str.split("\n")) 
     return dictList
@@ -21,6 +23,7 @@ def server_thread(my_client_socket, client_num):
             break
         else:
             print("Data from client:", str(client_num), ":", str(data))
+            print(client_info)
             data = str(data).upper()
             my_client_socket.send(data.encode())
         
@@ -59,6 +62,7 @@ def server_program():
         conn_socket, address = server_socket.accept()
 
         print("Connection", str(client_num), "made from ", str(address))
+        client_info[address[0]] = {'name': '', 'lives': 3}
 
         t = threading.Thread(target=server_thread, args=(conn_socket, client_num,))
         t.start()
