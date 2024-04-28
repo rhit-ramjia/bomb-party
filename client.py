@@ -25,7 +25,11 @@ def client_program():
 
         print("Received from server:", str(in_data))
 
-        message = input(" -> ")
+        if (in_data == "Choose a username."):
+
+            message = input("Username: ")
+        else:
+            message = input(" -> ")
     
     client_socket.close()
 
