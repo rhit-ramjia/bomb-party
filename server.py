@@ -2,6 +2,10 @@ import socket
 import sys
 import threading
 
+def Convert(str): 
+    dictList = list(str.split("\n")) 
+    return dictList
+
 def server_thread(my_client_socket, client_num):
     while True:
         data = my_client_socket.recv(1024).decode()
@@ -16,6 +20,12 @@ def server_thread(my_client_socket, client_num):
     my_client_socket.close()    
 
 def server_program():
+    file = open('dict.txt', 'r')
+
+    #read text file into list
+    data = file.read()
+    dictList = Convert(data)
+    # print(dictList[1])
     host = socket.gethostname()
     host_ip = socket.gethostbyname(host)
 
