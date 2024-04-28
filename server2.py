@@ -13,8 +13,10 @@ def server_thread(my_client_socket, client_num):
         if not data:
             break
         else:
-            if data[0:9] == "Username: ":
-                print('yay')
+            print(data[0:10])
+            if data[0:10] == "Username: ":
+                username = data[0:10]
+                # print('yay')
             print("Data from client:", str(client_num), ":", str(data))
             data = str(data).upper()
             my_client_socket.send(data.encode())
