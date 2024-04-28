@@ -1,15 +1,22 @@
 import socket
 import sys
 import threading
+import random
 
 def Convert(str): 
     dictList = list(str.split("\n")) 
     return dictList
 
+def generate_substring():
+    random_word = random.choice(dictList)
+    start_index = random.randint(0, len(random_word)-3)
+    end_index = start_index + random.randint(2, 3)
+    random_substring = random_word[start_index:end_index]
+    return random_substring
+
 def server_thread(my_client_socket, client_num):
     while True:
         data = my_client_socket.recv(1024).decode()
-
         if not data:
             break
         else:
@@ -24,8 +31,9 @@ def server_program():
 
     #read text file into list
     data = file.read()
+    global dictList
     dictList = Convert(data)
-    # print(dictList[1])
+    # print(dictList[1])    
     host = socket.gethostname()
     host_ip = socket.gethostbyname(host)
 
