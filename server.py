@@ -31,12 +31,12 @@ def server_thread(my_client_socket, client_num):
 
 def server_program():
     file = open('dict.txt', 'r')
-
-    #read text file into list
     data = file.read()
     global dictList
     dictList = Convert(data)
     # print(dictList[1])    
+    usedList = []
+    
     host = socket.gethostname()
     host_ip = socket.gethostbyname(host)
 

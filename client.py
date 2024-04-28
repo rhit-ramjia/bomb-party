@@ -17,7 +17,8 @@ def client_program():
 
     client_socket.connect(server_addr)
 
-    message = input(" -> ")
+    message = input("Choose a username: ")
+    message = "Username: " + message
     while (message.lower().strip() != ';;;'):
         client_socket.send(message.encode())
 
@@ -25,6 +26,10 @@ def client_program():
 
         print("Received from server:", str(in_data))
 
+        # if (in_data == "Choose a username."):
+
+        #     message = input("Username: ")
+        # else:
         message = input(" -> ")
     
     client_socket.close()
