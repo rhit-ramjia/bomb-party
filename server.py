@@ -5,6 +5,8 @@ import random
 
 client_info = {}
 
+# max_client_num = 0
+
 def Convert(str): 
     dictList = list(str.split("\n")) 
     return dictList
@@ -29,19 +31,31 @@ def server_thread(my_client_socket, client_num, address):
             if data[0:10] == "Username: ":
                 username = data[10:]
                 client_info[address]['name'] = username
-                # print(client_info)
 
             if data == "start" and client_num == 1:
                 print("leader client started the game")
                 
                 
                 # while(True):
+
+                # one run through of the game. Add loop later
+                cur_client_num = random.randint(1, len(client_info))
                 substring = generate_substring()
                 for client in client_info:
-                    # print(str(client_num) + ": ")
                     print(client_info[client]['conn_socket'])
-                    client_info[client]['conn_socket'].send("Game has Started".encode())
-                # GameLoop()
+                    client_info[client]['conn_socket'].send("Game has Started\n".encode())
+                    client_info[client]['conn_socket'].send(substring.encode())
+
+                #     client_info[client]['conn_socket'].recv(1024).decode()
+                #     print(cur_client_num)
+                # # print(client_num)
+                # if client_num == cur_client_num:
+                #     print("yay")
+
+                # take turns being the client that answers
+                cur_client_num += 1
+                if cur_client_num > len(client_info):
+                    cur_client_num = 1
             else:
                 my_client_socket.send(data.encode())
         
@@ -87,6 +101,7 @@ def server_program():
 
 
         client_num += 1
+        # max_client_num += 1
 
 
 if __name__ == '__main__':

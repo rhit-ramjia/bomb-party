@@ -40,7 +40,7 @@ def client_program():
 def listener_thread(client_socket):
     while(True):
         in_data = client_socket.recv(1024).decode()
-        print("Received from server:", str(in_data))
+        print(str(in_data))
 
 if __name__ == '__main__':
     client_program()
