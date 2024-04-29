@@ -13,9 +13,9 @@ def server_thread(my_client_socket, client_num):
         if not data:
             break
         else:
-            print(data[0:10])
+            print(data[10:])
             if data[0:10] == "Username: ":
-                username = data[0:10]
+                username = data[10:]
                 # print('yay')
             print("Data from client:", str(client_num), ":", str(data))
             data = str(data).upper()
