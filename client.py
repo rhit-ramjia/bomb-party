@@ -1,5 +1,6 @@
 import socket
 import sys
+import threading
 
 def client_program():
     if (len(sys.argv) != 3):
@@ -17,22 +18,29 @@ def client_program():
 
     client_socket.connect(server_addr)
 
+    t = threading.Thread(target=listener_thread, args=(client_socket,))
+    t.start()
+
+
     message = input("Choose a username: ")
     message = "Username: " + message
+    client_socket.send(message.encode())
+    
     while (message.lower().strip() != ';;;'):
+
+        message = input("")
         client_socket.send(message.encode())
+        # in_data = client_socket.recv(1024).decode()
 
-        in_data = client_socket.recv(1024).decode()
+        # print("Received from server:", str(in_data))
 
-        print("Received from server:", str(in_data))
-
-        # if (in_data == "Choose a username."):
-
-        #     message = input("Username: ")
-        # else:
-        message = input(" -> ")
     
     client_socket.close()
+
+def listener_thread(client_socket):
+    while(True):
+        in_data = client_socket.recv(1024).decode()
+        print("Received from server:", str(in_data))
 
 if __name__ == '__main__':
     client_program()

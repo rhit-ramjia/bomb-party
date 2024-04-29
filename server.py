@@ -17,7 +17,9 @@ def generate_substring():
     return random_substring
 
 def server_thread(my_client_socket, client_num, address):
-    client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num}
+    client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket}
+    # for client in client_info:
+    #     print(str(client['conn_socket']))
     while True:
         data = my_client_socket.recv(1024).decode()
         if not data:
@@ -27,11 +29,21 @@ def server_thread(my_client_socket, client_num, address):
             if data[0:10] == "Username: ":
                 username = data[10:]
                 client_info[address]['name'] = username
-                print(client_info)
+                # print(client_info)
 
             if data == "start" and client_num == 1:
                 print("leader client started the game")
-            my_client_socket.send(data.encode())
+                
+                
+                # while(True):
+                substring = generate_substring()
+                for client in client_info:
+                    # print(str(client_num) + ": ")
+                    print(client_info[client]['conn_socket'])
+                    client_info[client]['conn_socket'].send("Game has Started".encode())
+                # GameLoop()
+            else:
+                my_client_socket.send(data.encode())
         
     my_client_socket.close()    
 
@@ -71,6 +83,8 @@ def server_program():
 
         t = threading.Thread(target=server_thread, args=(conn_socket, client_num, address,))
         t.start()
+        # client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': conn_socket}
+
 
         client_num += 1
 
