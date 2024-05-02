@@ -24,6 +24,7 @@ def server_thread(my_client_socket, client_num, address):
     #     print(str(client['conn_socket']))
     while True:
         data = my_client_socket.recv(1024).decode()
+        cur_client = client_info[address]
         if not data:
             break
         else:
@@ -40,11 +41,16 @@ def server_thread(my_client_socket, client_num, address):
 
                 # one run through of the game. Add loop later
                 cur_client_num = random.randint(1, len(client_info))
+                cur_client_num = 1
                 substring = generate_substring()
                 for client in client_info:
-                    print(client_info[client]['conn_socket'])
+                    # print(client_info[client]['conn_socket'])
                     client_info[client]['conn_socket'].send("Game has Started\n".encode())
-                    client_info[client]['conn_socket'].send(substring.encode())
+                    if client_info[client]['client_num'] == cur_client_num:
+                        cur_client = client_info[client]
+                    client_info[client]['conn_socket'].send((cur_client['name'] + "'s turn\n").encode())
+                    client_info[client]['conn_socket'].send((substring + "\n").encode())
+
 
                 #     client_info[client]['conn_socket'].recv(1024).decode()
                 #     print(cur_client_num)
@@ -53,9 +59,19 @@ def server_thread(my_client_socket, client_num, address):
                 #     print("yay")
 
                 # take turns being the client that answers
+                # print('1\n')
+                data = cur_client['conn_socket'].recv(1024).decode()
+                print(data.upper() + '\n')
+                print(data.upper().find(substring))
+                # if (data.upper()).find(substring) != -1:
+                if (data.upper()).find(substring) != -1 and cur_client['client_num'] == cur_client_num:
+
+                    print('yayayayayayayayayayay')
+                # print('1\n')
                 cur_client_num += 1
                 if cur_client_num > len(client_info):
                     cur_client_num = 1
+                print("cur_client_num: " + str(cur_client_num))
             else:
                 my_client_socket.send(data.encode())
         
@@ -91,10 +107,14 @@ def server_program():
     client_num = 1
 
     while True:
+        # cur_client_num = random.randint(1, len(client_info))
+        # substring = generate_substring()
+        # cur_client = 0
+
         conn_socket, address = server_socket.accept()
 
         print("Connection", str(client_num), "made from ", str(address))
-
+        
         t = threading.Thread(target=server_thread, args=(conn_socket, client_num, address,))
         t.start()
         # client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': conn_socket}
