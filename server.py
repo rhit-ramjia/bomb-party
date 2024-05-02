@@ -28,8 +28,7 @@ def generate_substring():
 
 def server_thread(my_client_socket, client_num, address):
     # global client_info
-    with lock:
-        client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket}
+    client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket}
     # for client in client_info:
     #     print(str(client['conn_socket']))
     while True:
@@ -41,8 +40,7 @@ def server_thread(my_client_socket, client_num, address):
             print("Data from client:", str(client_num), ":", str(data))
             if data[0:10] == "Username: ":
                 username = data[10:]
-                with lock:
-                    client_info[address]['name'] = username
+                client_info[address]['name'] = username
 
             if data == "start" and client_num == 1:
                 print("leader client started the game")
@@ -60,8 +58,9 @@ def server_thread(my_client_socket, client_num, address):
                     # print(client_info[client]['conn_socket'])
                     client_info[client]['conn_socket'].send("Game has Started\n".encode())
                     if client_info[client]['client_num'] == cur_client_num:
-                        with lock:
-                            cur_client = client_info[client]
+                        cur_client = client_info[client]
+
+                for client in client_info:
                     client_info[client]['conn_socket'].send((cur_client['name'] + "'s turn\n").encode())
                     client_info[client]['conn_socket'].send((substring + "\n").encode())
 
@@ -85,6 +84,8 @@ def server_thread(my_client_socket, client_num, address):
                     if cur_client_num > len(client_info):
                         cur_client_num = 1
                 print("cur_client_num: " + str(cur_client_num))
+                
+            # at some point, we should add error msgs to show user why their answer is wrong
             else:
                 my_client_socket.send(data.encode())
         
