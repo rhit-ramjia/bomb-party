@@ -3,7 +3,15 @@ import sys
 import threading
 import random
 
+lock = threading.Lock()
+
+# global client_info
 client_info = {}
+cur_client_num = 1
+# cur_client_num = 2
+substring = ''
+global cur_client
+# substring = generate_substring()
 
 # max_client_num = 0
 
@@ -19,7 +27,9 @@ def generate_substring():
     return random_substring
 
 def server_thread(my_client_socket, client_num, address):
-    client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket}
+    # global client_info
+    with lock:
+        client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket}
     # for client in client_info:
     #     print(str(client['conn_socket']))
     while True:
@@ -31,7 +41,8 @@ def server_thread(my_client_socket, client_num, address):
             print("Data from client:", str(client_num), ":", str(data))
             if data[0:10] == "Username: ":
                 username = data[10:]
-                client_info[address]['name'] = username
+                with lock:
+                    client_info[address]['name'] = username
 
             if data == "start" and client_num == 1:
                 print("leader client started the game")
@@ -40,14 +51,17 @@ def server_thread(my_client_socket, client_num, address):
                 # while(True):
 
                 # one run through of the game. Add loop later
-                cur_client_num = random.randint(1, len(client_info))
-                cur_client_num = 1
-                substring = generate_substring()
+                with lock:
+                    cur_client_num = random.randint(1, len(client_info))
+                    cur_client_num = 2
+                    substring = generate_substring()
+                
                 for client in client_info:
                     # print(client_info[client]['conn_socket'])
                     client_info[client]['conn_socket'].send("Game has Started\n".encode())
                     if client_info[client]['client_num'] == cur_client_num:
-                        cur_client = client_info[client]
+                        with lock:
+                            cur_client = client_info[client]
                     client_info[client]['conn_socket'].send((cur_client['name'] + "'s turn\n").encode())
                     client_info[client]['conn_socket'].send((substring + "\n").encode())
 
@@ -59,18 +73,17 @@ def server_thread(my_client_socket, client_num, address):
                 #     print("yay")
 
                 # take turns being the client that answers
-                # print('1\n')
                 data = cur_client['conn_socket'].recv(1024).decode()
                 print(data.upper() + '\n')
                 print(data.upper().find(substring))
-                # if (data.upper()).find(substring) != -1:
-                if (data.upper()).find(substring) != -1 and cur_client['client_num'] == cur_client_num:
 
-                    print('yayayayayayayayayayay')
-                # print('1\n')
-                cur_client_num += 1
-                if cur_client_num > len(client_info):
-                    cur_client_num = 1
+                if (data.upper()).find(substring) != -1 and data.upper() not in usedList and cur_client['client_num'] == cur_client_num:
+                    usedList.append(data.upper())
+                    print('valid word')
+                with lock:
+                    cur_client_num += 1
+                    if cur_client_num > len(client_info):
+                        cur_client_num = 1
                 print("cur_client_num: " + str(cur_client_num))
             else:
                 my_client_socket.send(data.encode())
@@ -82,7 +95,8 @@ def server_program():
     data = file.read()
     global dictList
     dictList = Convert(data)
-    # print(dictList[1])    
+    # print(dictList[1]) 
+    global usedList   
     usedList = []
     
     host = socket.gethostname()
@@ -115,7 +129,7 @@ def server_program():
 
         print("Connection", str(client_num), "made from ", str(address))
         
-        t = threading.Thread(target=server_thread, args=(conn_socket, client_num, address,))
+        t = threading.Thread(target=server_thread, args=(conn_socket, client_num, address, ))
         t.start()
         # client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': conn_socket}
 
