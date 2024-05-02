@@ -49,42 +49,43 @@ def server_thread(my_client_socket, client_num, address):
                 # while(True):
 
                 # one run through of the game. Add loop later
-                with lock:
-                    cur_client_num = random.randint(1, len(client_info))
-                    cur_client_num = 2
+                cur_client_num = random.randint(1, len(client_info))
+                # cur_client_num = 2
+
+                while (True):
                     substring = generate_substring()
-                
-                for client in client_info:
-                    # print(client_info[client]['conn_socket'])
-                    client_info[client]['conn_socket'].send("Game has Started\n".encode())
-                    if client_info[client]['client_num'] == cur_client_num:
-                        cur_client = client_info[client]
+                    
+                    for client in client_info:
+                        # print(client_info[client]['conn_socket'])
+                        client_info[client]['conn_socket'].send("Game has Started\n".encode())
+                        if client_info[client]['client_num'] == cur_client_num:
+                            print(cur_client_num)
+                            cur_client = client_info[client]
 
-                for client in client_info:
-                    client_info[client]['conn_socket'].send((cur_client['name'] + "'s turn\n").encode())
-                    client_info[client]['conn_socket'].send((substring + "\n").encode())
+                    for client in client_info:
+                        client_info[client]['conn_socket'].send((cur_client['name'] + "'s turn\n").encode())
+                        client_info[client]['conn_socket'].send((substring + "\n").encode())
 
 
-                #     client_info[client]['conn_socket'].recv(1024).decode()
-                #     print(cur_client_num)
-                # # print(client_num)
-                # if client_num == cur_client_num:
-                #     print("yay")
+                    #     client_info[client]['conn_socket'].recv(1024).decode()
+                    #     print(cur_client_num)
+                    # # print(client_num)
+                    # if client_num == cur_client_num:
+                    #     print("yay")
 
-                # take turns being the client that answers
-                data = cur_client['conn_socket'].recv(1024).decode()
-                print(data.upper() + '\n')
-                print(data.upper().find(substring))
+                    # take turns being the client that answers
+                    data = cur_client['conn_socket'].recv(1024).decode()
+                    print(data.upper() + '\n')
+                    print(data.upper().find(substring))
 
-                if (data.upper()).find(substring) != -1 and data.upper() not in usedList and cur_client['client_num'] == cur_client_num:
-                    usedList.append(data.upper())
-                    print('valid word')
-                with lock:
+                    if (data.upper()).find(substring) != -1 and data.upper() not in usedList and cur_client['client_num'] == cur_client_num:
+                        usedList.append(data.upper())
+                        print('valid word')
                     cur_client_num += 1
                     if cur_client_num > len(client_info):
                         cur_client_num = 1
-                print("cur_client_num: " + str(cur_client_num))
-                
+                    print("cur_client_num: " + str(cur_client_num))
+                print('game loop exited')
             # at some point, we should add error msgs to show user why their answer is wrong
             else:
                 my_client_socket.send(data.encode())
