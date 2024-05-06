@@ -7,10 +7,10 @@ lock = threading.Lock()
 
 # global client_info
 client_info = {}
-cur_client_num = 1
 # cur_client_num = 2
 substring = ''
 global cur_client
+turn_event = threading.Event()
 # substring = generate_substring()
 
 # max_client_num = 0
@@ -26,13 +26,21 @@ def generate_substring():
     random_substring = random_word[start_index:end_index]
     return random_substring
 
-def server_thread(my_client_socket, client_num, address):
-    # global client_info
-    client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket}
-    # for client in client_info:
-    #     print(str(client['conn_socket']))
+def all_clients_started(client_data):
+    for client in client_data:
+        if not client_data[client]['started']:
+            return False
+    return True
+
+def lose_life(client):
+    client['lives'] -= 1
+    print("num lives left: ", client['lives'])
+
+def server_thread(my_client_socket, client_num, address, client_info):
+    client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket, 'started': False, 'cur_player': 1}
     while True:
         data = my_client_socket.recv(1024).decode()
+        print("i received data: ", data)
         cur_client = client_info[address]
         if not data:
             break
@@ -42,51 +50,54 @@ def server_thread(my_client_socket, client_num, address):
                 username = data[10:]
                 client_info[address]['name'] = username
 
-            if data == "start" and client_num == 1:
-                print("leader client started the game")
-                
-                
-                # while(True):
+            if data == "start":
+                cur_client['started'] = True
 
-                # one run through of the game. Add loop later
-                cur_client_num = random.randint(1, len(client_info))
-                # cur_client_num = 2
+                while (not all_clients_started(client_info)):
+                    continue
+
+                print("all clients started")
+                cur_client['conn_socket'].send("Game has Started\n".encode())
 
                 while (True):
-                    substring = generate_substring()
-                    
-                    for client in client_info:
-                        # print(client_info[client]['conn_socket'])
-                        client_info[client]['conn_socket'].send("Game has Started\n".encode())
-                        if client_info[client]['client_num'] == cur_client_num:
-                            print(cur_client_num)
-                            cur_client = client_info[client]
-
-                    for client in client_info:
-                        client_info[client]['conn_socket'].send((cur_client['name'] + "'s turn\n").encode())
-                        client_info[client]['conn_socket'].send((substring + "\n").encode())
-
-
-                    #     client_info[client]['conn_socket'].recv(1024).decode()
-                    #     print(cur_client_num)
-                    # # print(client_num)
-                    # if client_num == cur_client_num:
-                    #     print("yay")
-
-                    # take turns being the client that answers
-                    data = cur_client['conn_socket'].recv(1024).decode()
-                    print(data.upper() + '\n')
-                    print(data.upper().find(substring))
-
-                    if (data.upper()).find(substring) != -1 and data.upper() not in usedList and cur_client['client_num'] == cur_client_num:
-                        usedList.append(data.upper())
-                        print('valid word')
-                    cur_client_num += 1
-                    if cur_client_num > len(client_info):
-                        cur_client_num = 1
-                    print("cur_client_num: " + str(cur_client_num))
-                print('game loop exited')
-            # at some point, we should add error msgs to show user why their answer is wrong
+                    cur_client_num = client_info[address]['cur_player']
+                    if (cur_client_num == client_num):
+                        print("client num: ", client_num)
+                        print("cur client num: ", cur_client_num)
+                        substring = generate_substring()
+                        name = ''
+                        for client in client_info:
+                            if client_info[client]['client_num'] == cur_client_num:
+                                name = client_info[client]['name']
+                        for client in client_info:
+                            client_info[client]['conn_socket'].send((name + "'s turn\n").encode())
+                            client_info[client]['conn_socket'].send((substring + "\n").encode())
+                        # cur_client['conn_socket'].send((substring + "\n").encode())
+                        print(cur_client['lives'])
+                        # timer = threading.Timer(8.0, lose_life, args=(cur_client,))
+                        cur_client['conn_socket'].settimeout(8)
+                        try:
+                            data = cur_client['conn_socket'].recv(1024).decode()
+                            if (data.upper()).find(substring) != -1 and data.upper() not in usedList:
+                                # timer.cancel()
+                                usedList.append(data.upper())
+                                print('valid word')
+                        except socket.timeout:
+                            lose_life(cur_client)
+                            for client in client_info:
+                                client_info[client]['conn_socket'].send((name + " has " + str(cur_client['lives']) + " lives remaining").encode())
+                        cur_client['conn_socket'].settimeout(None)
+                        with lock:
+                            for client in client_info:
+                                client_info[client]['cur_player'] += 1
+                                if client_info[client]['cur_player'] > len(client_info):
+                                    client_info[client]['cur_player'] = 1
+                        print("cur_client_num: " + str(client_info[client]['cur_player']))
+                        turn_event.set()
+                    else:
+                        turn_event.wait()
+                        print('thread cleared')
+                        turn_event.clear()
             else:
                 my_client_socket.send(data.encode())
         
@@ -131,7 +142,7 @@ def server_program():
 
         print("Connection", str(client_num), "made from ", str(address))
         
-        t = threading.Thread(target=server_thread, args=(conn_socket, client_num, address, ))
+        t = threading.Thread(target=server_thread, args=(conn_socket, client_num, address, client_info, ))
         t.start()
         # client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': conn_socket}
 
