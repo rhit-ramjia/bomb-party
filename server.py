@@ -12,6 +12,8 @@ substring = ''
 global cur_client
 global players_left
 turn_event = threading.Event()
+alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v','w','x','y','z']
+# alphabet = ['e']
 # substring = generate_substring()
 
 # max_client_num = 0
@@ -39,7 +41,7 @@ def lose_life(client):
         print(client['name'] + " num lives left: ", client['lives'])
 
 def server_thread(my_client_socket, client_num, address, client_info):
-    client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket, 'started': False, 'cur_player': 1}
+    client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket, 'started': False, 'cur_player': 1, 'unused_letters': alphabet}
     while True:
         data = my_client_socket.recv(1024).decode()
         print("i received data: ", data)
@@ -79,13 +81,24 @@ def server_thread(my_client_socket, client_num, address, client_info):
                         # cur_client['conn_socket'].send((substring + "\n").encode())
                         print(cur_client['lives'])
                         # timer = threading.Timer(8.0, lose_life, args=(cur_client,))
-                        cur_client['conn_socket'].settimeout(2)
+                        cur_client['conn_socket'].settimeout(100)
                         try:
                             data = cur_client['conn_socket'].recv(1024).decode()
                             if (data.upper()).find(substring) != -1 and data.upper() not in usedList:
                                 # timer.cancel()
                                 usedList.append(data.upper())
-                                print('valid word')
+                                for client in client_info:
+                                    client_info[client]['conn_socket'].send((name + " said: " + data).encode())
+                                for letter in data:
+                                    print(letter)
+                                    if letter in cur_client['unused_letters']:
+                                        cur_client['unused_letters'].remove(letter)
+                                if len(cur_client['unused_letters']) == 0:
+                                    cur_client['lives'] += 1
+                                    print(cur_client['name'] + "'s lives increased to " + str(cur_client['lives']))
+                                    cur_client['unused_letters'] = alphabet
+
+                                print(cur_client['unused_letters'])
                         except socket.timeout:
                             lose_life(cur_client)
                             for client in client_info:
