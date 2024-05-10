@@ -10,6 +10,7 @@ client_info = {}
 # cur_client_num = 2
 substring = ''
 global cur_client
+global players_left
 turn_event = threading.Event()
 # substring = generate_substring()
 
@@ -33,8 +34,9 @@ def all_clients_started(client_data):
     return True
 
 def lose_life(client):
-    client['lives'] -= 1
-    print("num lives left: ", client['lives'])
+    if client['lives'] > 0:
+        client['lives'] -= 1
+        print(client['name'] + " num lives left: ", client['lives'])
 
 def server_thread(my_client_socket, client_num, address, client_info):
     client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket, 'started': False, 'cur_player': 1}
@@ -57,11 +59,13 @@ def server_thread(my_client_socket, client_num, address, client_info):
                     continue
 
                 print("all clients started")
+                players_left = len(client_info)
+                print('aaaaaaaaaaaaa', players_left)
                 cur_client['conn_socket'].send("Game has Started\n".encode())
 
                 while (True):
                     cur_client_num = client_info[address]['cur_player']
-                    if (cur_client_num == client_num):
+                    if (cur_client_num == client_num and client_info[address]['lives'] > 0):
                         print("client num: ", client_num)
                         print("cur client num: ", cur_client_num)
                         substring = generate_substring()
@@ -75,7 +79,7 @@ def server_thread(my_client_socket, client_num, address, client_info):
                         # cur_client['conn_socket'].send((substring + "\n").encode())
                         print(cur_client['lives'])
                         # timer = threading.Timer(8.0, lose_life, args=(cur_client,))
-                        cur_client['conn_socket'].settimeout(8)
+                        cur_client['conn_socket'].settimeout(2)
                         try:
                             data = cur_client['conn_socket'].recv(1024).decode()
                             if (data.upper()).find(substring) != -1 and data.upper() not in usedList:
@@ -86,6 +90,16 @@ def server_thread(my_client_socket, client_num, address, client_info):
                             lose_life(cur_client)
                             for client in client_info:
                                 client_info[client]['conn_socket'].send((name + " has " + str(cur_client['lives']) + " lives remaining").encode())
+                            if cur_client['lives'] == 0:
+                                with lock:
+                                    players_left -= 1
+                                print('players left', players_left)
+                                for client in client_info:
+                                    client_info[client]['conn_socket'].send((name + " has died").encode())
+
+                            if players_left == 1:
+                                print('game over')
+                                break
                         cur_client['conn_socket'].settimeout(None)
                         with lock:
                             for client in client_info:
