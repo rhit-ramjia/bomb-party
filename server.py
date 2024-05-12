@@ -95,7 +95,7 @@ def server_thread(my_client_socket, client_num, address, client_info):
                         # cur_client['conn_socket'].send((substring + "\n").encode())
                         # print(cur_client['lives'])
                         # timer = threading.Timer(8.0, lose_life, args=(cur_client,))
-                        cur_client['conn_socket'].settimeout(100)
+                        cur_client['conn_socket'].settimeout(8)
                         try:
                             data = cur_client['conn_socket'].recv(1024).decode()
                             if (data.upper()).find(substring) != -1 and data.upper() not in usedList:
