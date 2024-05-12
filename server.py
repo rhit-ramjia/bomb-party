@@ -36,8 +36,13 @@ def lose_life(client):
     client['lives'] -= 1
     print("num lives left: ", client['lives'])
 
+def remove_client_num(client_data, num):
+    for client in client_data:
+        client_data[client]['players_remaining'].discard(num)
+
 def server_thread(my_client_socket, client_num, address, client_info):
-    client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket, 'started': False, 'cur_player': 1}
+    with lock:
+        client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket, 'started': False, 'cur_player': 1, 'players_remaining': set()}
     while True:
         data = my_client_socket.recv(1024).decode()
         print("i received data: ", data)
@@ -53,17 +58,30 @@ def server_thread(my_client_socket, client_num, address, client_info):
             if data == "start":
                 cur_client['started'] = True
 
+                with lock:
+                    for client in client_info:
+                        client_info[client]['players_remaining'].add(cur_client['client_num'])
+
                 while (not all_clients_started(client_info)):
                     continue
 
                 print("all clients started")
+                print(cur_client['client_num'])
+                
                 cur_client['conn_socket'].send("Game has Started\n".encode())
+                print(cur_client['players_remaining'])
 
                 while (True):
                     cur_client_num = client_info[address]['cur_player']
                     if (cur_client_num == client_num):
                         print("client num: ", client_num)
                         print("cur client num: ", cur_client_num)
+                        if (len(cur_client['players_remaining']) == 1):
+                            print(cur_client['name'] + " wins!")
+                            for client in client_info:
+                                client_info[client]['conn_socket'].send((cur_client['name'] + " wins!\n").encode())
+                            turn_event.set()
+                            break
                         substring = generate_substring()
                         name = ''
                         for client in client_info:
@@ -73,7 +91,7 @@ def server_thread(my_client_socket, client_num, address, client_info):
                             client_info[client]['conn_socket'].send((name + "'s turn\n").encode())
                             client_info[client]['conn_socket'].send((substring + "\n").encode())
                         # cur_client['conn_socket'].send((substring + "\n").encode())
-                        print(cur_client['lives'])
+                        # print(cur_client['lives'])
                         # timer = threading.Timer(8.0, lose_life, args=(cur_client,))
                         cur_client['conn_socket'].settimeout(8)
                         try:
@@ -85,13 +103,24 @@ def server_thread(my_client_socket, client_num, address, client_info):
                         except socket.timeout:
                             lose_life(cur_client)
                             for client in client_info:
-                                client_info[client]['conn_socket'].send((name + " has " + str(cur_client['lives']) + " lives remaining").encode())
+                                client_info[client]['conn_socket'].send((name + " has " + str(cur_client['lives']) + " lives remaining\n").encode())
+                                if cur_client['lives'] == 0:
+                                    client_info[client]['conn_socket'].send((name + " loses the game.").encode())
+                                    remove_client_num(client_info,cur_client_num)
+                                    # if (len(cur_client['players_remaining']) == 1):
+                                    #     print("we have a winner!")
+                                    #     break
                         cur_client['conn_socket'].settimeout(None)
                         with lock:
                             for client in client_info:
+                                print(client_info[client]['players_remaining'])
                                 client_info[client]['cur_player'] += 1
+                                while client_info[client]['cur_player'] <= len(client_info) and client_info[client]['cur_player'] not in client_info[client]['players_remaining']:
+                                    client_info[client]['cur_player'] += 1
                                 if client_info[client]['cur_player'] > len(client_info):
                                     client_info[client]['cur_player'] = 1
+                                while client_info[client]['cur_player'] <= len(client_info) and client_info[client]['cur_player'] not in client_info[client]['players_remaining']:
+                                    client_info[client]['cur_player'] += 1
                         print("cur_client_num: " + str(client_info[client]['cur_player']))
                         turn_event.set()
                     else:
