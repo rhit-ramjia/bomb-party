@@ -46,6 +46,7 @@ def remove_client_num(client_data, num):
         client_data[client]['players_remaining'].discard(num)
 
 def server_thread(my_client_socket, client_num, address, client_info):
+    my_client_socket.send(("client_num: " + str(client_num)).encode())
     with lock:
         client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket, 'started': False, 'cur_player': 1, 'players_remaining': set(), 'unused_letters': alphabet}
     while True:
@@ -59,6 +60,14 @@ def server_thread(my_client_socket, client_num, address, client_info):
             if data[0:10] == "Username: ":
                 username = data[10:]
                 client_info[address]['name'] = username
+                
+                client_names = ''
+                for client in client_info:
+                    client_names += client_info[client]['name'] + ':'
+                for client in client_info:
+                    # client_names = ''
+                    # client_names += '; ' + client_info[client]['name']
+                    client_info[client]['conn_socket'].send(('client_num_name;' + client_names + '\n').encode())
 
             if data == "start":
                 cur_client['started'] = True
@@ -157,6 +166,7 @@ def server_program():
     usedList = []
     
     host = socket.gethostname()
+    # host = '172.22.47.255'
     host_ip = socket.gethostbyname(host)
 
     print("Host name:", str(host))
@@ -173,7 +183,7 @@ def server_program():
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind(('', port))
 
-    server_socket.listen(5)
+    server_socket.listen(8)
 
     client_num = 1
 
