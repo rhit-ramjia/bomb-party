@@ -46,6 +46,7 @@ def remove_client_num(client_data, num):
         client_data[client]['players_remaining'].discard(num)
 
 def server_thread(my_client_socket, client_num, address, client_info):
+    # my_client_socket.send(("client_num: " + str(client_num)).encode())
     with lock:
         client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket, 'started': False, 'cur_player': 1, 'players_remaining': set(), 'unused_letters': alphabet}
     while True:
@@ -59,6 +60,14 @@ def server_thread(my_client_socket, client_num, address, client_info):
             if data[0:10] == "Username: ":
                 username = data[10:]
                 client_info[address]['name'] = username
+                
+                client_names = ''
+                for client in client_info:
+                    client_names += client_info[client]['name'] + ':'
+                for client in client_info:
+                    # client_names = ''
+                    # client_names += '; ' + client_info[client]['name']
+                    client_info[client]['conn_socket'].send(('!!!client_num_name;' + client_names + '\n').encode())
 
             if data == "start":
                 cur_client['started'] = True
@@ -84,6 +93,10 @@ def server_thread(my_client_socket, client_num, address, client_info):
                             for client in client_info:
                                 client_info[client]['conn_socket'].send((cur_client['name'] + " wins!\n").encode())
                             turn_event.set()
+                            for client in client_info:
+                                client_info[client]['lives'] = 3
+                                client_info[client]['started'] = False
+                                client_info[client]['unused_letters'] = alphabet
                             break
                         substring = generate_substring()
                         name = ''
@@ -98,28 +111,39 @@ def server_thread(my_client_socket, client_num, address, client_info):
                         # timer = threading.Timer(8.0, lose_life, args=(cur_client,))
                         cur_client['conn_socket'].settimeout(8)
                         try:
-                            data = cur_client['conn_socket'].recv(1024).decode()
-                            if (data.upper()).find(substring) != -1 and data.upper() not in usedList:
-                                # timer.cancel()
-                                usedList.append(data.upper())
-                                for client in client_info:
-                                    client_info[client]['conn_socket'].send((name + " said: " + data).encode())
-                                for letter in data:
-                                    print(letter)
-                                    if letter in cur_client['unused_letters']:
-                                        cur_client['unused_letters'].remove(letter)
-                                if len(cur_client['unused_letters']) == 0:
-                                    cur_client['lives'] += 1
-                                    print(cur_client['name'] + "'s lives increased to " + str(cur_client['lives']))
-                                    cur_client['unused_letters'] = alphabet
+                            while True:
+                                data = cur_client['conn_socket'].recv(1024).decode()
+                                print (data.upper().find(substring))
+                                if (not data.upper().find(substring) == -1) and data.upper() not in usedList:
+                                    # timer.cancel()
+                                    usedList.append(data.upper())
+                                    for client in client_info:
+                                        client_info[client]['conn_socket'].send((name + " said: " + data).encode())
+                                    for letter in data:
+                                        print(letter)
+                                        if letter in cur_client['unused_letters']:
+                                            cur_client['unused_letters'].remove(letter)
+                                    if len(cur_client['unused_letters']) == 0:
+                                        cur_client['lives'] += 1
+                                        print(cur_client['name'] + "'s lives increased to " + str(cur_client['lives']))
+                                        cur_client['unused_letters'] = alphabet
 
-                                print(cur_client['unused_letters'])
+                                    print(cur_client['unused_letters'])
+                                    break
+                                else:
+                                    if data.upper().find(substring) == -1:
+                                        cur_client['conn_socket'].send(('Substring is not in the word\n').encode())
+                                    elif data.upper() in usedList:
+                                        cur_client['conn_socket'].send(('Word has already been used\n').encode())
+                                        
+                                    cur_client['conn_socket'].send((substring + "\n").encode())
+                                
                         except socket.timeout:
                             lose_life(cur_client)
                             for client in client_info:
                                 client_info[client]['conn_socket'].send((name + " has " + str(cur_client['lives']) + " lives remaining\n").encode())
                                 if cur_client['lives'] == 0:
-                                    client_info[client]['conn_socket'].send((name + " loses the game.").encode())
+                                    client_info[client]['conn_socket'].send((name + " loses the game.\n").encode())
                                     remove_client_num(client_info,cur_client_num)
                                     # if (len(cur_client['players_remaining']) == 1):
                                     #     print("we have a winner!")
@@ -141,9 +165,13 @@ def server_thread(my_client_socket, client_num, address, client_info):
                     else:
                         turn_event.wait()
                         print('thread cleared')
+                                # client_info[address] = {'name': '', 'lives': 3, 'client_num': client_num, 'conn_socket': my_client_socket, 'started': False, 'cur_player': 1, 'players_remaining': set(), 'unused_letters': alphabet}
+                        
                         turn_event.clear()
+            elif data[0:10] == 'Username: ':
+                continue
             else:
-                my_client_socket.send(data.encode())
+                my_client_socket.send(('Not a valid command').encode())
         
     my_client_socket.close()    
 
@@ -157,6 +185,7 @@ def server_program():
     usedList = []
     
     host = socket.gethostname()
+    # host = '172.22.47.255'
     host_ip = socket.gethostbyname(host)
 
     print("Host name:", str(host))
@@ -173,7 +202,7 @@ def server_program():
     server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server_socket.bind(('', port))
 
-    server_socket.listen(5)
+    server_socket.listen(8)
 
     client_num = 1
 
