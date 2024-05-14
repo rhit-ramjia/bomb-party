@@ -13,12 +13,14 @@ queue = []
 
 def client_program():
     
+    
     if (len(sys.argv) != 3):
         print("Usage: python client.py <ServerIP> <ServerPort>")
         sys.exit()
     
     port = int(sys.argv[2])
     server_ip = socket.gethostbyname(sys.argv[1])
+    # server_ip = socket.gethostbyname('172.22.47.255')
     # server_ip = socket.gethostbyname('172.22.47.255')
 
     print("Server IP:", server_ip)
@@ -31,7 +33,16 @@ def client_program():
 
     t1 = threading.Thread(target=listener_thread, args=(client_socket,))
     t1.start()
+    t1 = threading.Thread(target=listener_thread, args=(client_socket,))
+    t1.start()
 
+    c = Circle(Point(290,290), 60)
+    c.draw(win)
+    # while True:
+    #     while (len(queue) != 0):
+    #         g_name = Text(Point(290,100), queue[0])
+    #         queue.pop(0)
+    #         g_name.draw(win)
     c = Circle(Point(290,290), 60)
     c.draw(win)
     # while True:
@@ -89,6 +100,7 @@ def messager_thread(client_socket, message):
         message = input("")
         client_socket.send(message.encode())
     client_socket.close()
+    
     
 
 if __name__ == '__main__':

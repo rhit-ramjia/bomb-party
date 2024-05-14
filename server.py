@@ -203,6 +203,7 @@ def server_program():
     server_socket.bind(('', port))
 
     server_socket.listen(8)
+    server_socket.listen(8)
 
     client_num = 1
 
