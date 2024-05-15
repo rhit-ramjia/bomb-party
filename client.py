@@ -11,10 +11,14 @@ win = GraphWin('Bomb Party', 600, 600)
 win.setBackground('white')
 loading = Text(Point(290, 290), 'Please enter your username')
 loading.draw(win)
+entry = Entry(Point(290, 320), 20) 
+entry.draw(win)
 client_names = []
 arrow = ''
 queue = []
 arrows=[]
+lives_list=[]
+xs=[]
 alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v','w','x','y','z']
 
 
@@ -37,6 +41,8 @@ def lil_red_cross(x, y):
     rect2.setFill('red')
     rect1.draw(win)
     rect2.draw(win)
+    xs.append(rect1)
+    xs.append(rect2)
     
 def clear(win):
     for item in win.items[:]:
@@ -72,8 +78,14 @@ def client_program():
     #         queue.pop(0)
     #         g_name.draw(win)
 
-    message = input("Choose a username: ")
-    message = "Username: " + message
+    # message = input("Choose a username: ")
+    # message = "Username: " + message
+    while True:
+        key = win.getKey()
+        if key == "Return": 
+            break
+    username = entry.getText()
+    message = "Username: " + username
     client_socket.send(message.encode())
     t2 = threading.Thread(target=messager_thread, args=(client_socket, message))
     t2.start()
@@ -82,6 +94,8 @@ def client_program():
     # c = Circle(Point(290,290), 60)
     wait_for_start = Text(Point(290,290), "Waiting for all players to type \"start\"")
     wait_for_start.draw(win)
+
+    
     
     # print('hi')
     while True:
@@ -98,6 +112,10 @@ def client_program():
                     
                     g_name = Text(Point((i * 100), 100), client_names[i])
                     g_name.draw(win)
+                    lives = Text(Point((i * 100), 70), 'Lives: 3')
+                    lives.setTextColor('pink')
+                    lives_list.append(lives)
+                    # lives.draw()
                     
             elif queue[0].find('used_letters:') != -1:
                 letter_list = queue[0].split('used_letters:')
@@ -119,6 +137,8 @@ def client_program():
                 bomb.setFill('black')
                 bomb.draw(win)
                 
+                for x in range (0, len(lives_list)):
+                    lives_list[x].draw(win)
                 for x in range (0, len(alphabet)):
                     text_letter = Text(Point(10 + 23*x,530), alphabet[x])
                     text_letter.draw(win)
@@ -133,6 +153,7 @@ def client_program():
                 clear(win)
                 win_text = Text(Point(290,290), winner[1])
                 win_text.draw(win)
+                # win_text.
                 
             if queue[0].find('loser:') != -1:
                 loser = queue[0].split(':')
@@ -140,6 +161,7 @@ def client_program():
                     x.undraw()
                 # print(len(client_names))
                 for i in range(1, len(client_names) - 1):
+                    # print(client_names)
                     if client_names[i] == loser[1]:
                         # g_loser = Circle(Point((i * 100), 100), 20)
                         
@@ -163,19 +185,67 @@ def client_program():
                 black_out = Circle(Point(290,290), 80)
                 black_out.setFill('black')
                 black_out.draw(win)
-                # substring.undraw()
-                for x in arrows:
-                    x.undraw()
                 substring = Text(Point(290,300), substr[1])
                 substring.setTextColor('white')
                 substring.draw(win)
+                # for x in arrows:
+                #     x.undraw()
+                # for i in range(1, len(client_names) - 1):
+                #     # print(client_names)
+                #     # print(substr)
+                #     if client_names[i] == substr[2]:
+                        
+                #         arrow = Line(Point(290,280), Point(i * 100,110))
+                #         arrows.append(arrow)
+                #         arrow.setArrow('last')
+                #         arrow.draw(win)
+            if queue[0].find('player_name:') != -1:
+                player_name = queue[0].split(':')
+                for x in arrows:
+                    x.undraw()
                 for i in range(1, len(client_names) - 1):
-                    if client_names[i] == substr[2]:
+                    # print(client_names)
+                    # print(substr)
+                    if client_names[i] == player_name[1]:
                         
                         arrow = Line(Point(290,280), Point(i * 100,110))
                         arrows.append(arrow)
                         arrow.setArrow('last')
                         arrow.draw(win)
+
+            if queue[0].find('reset_letters:') != -1:
+                reset_letters = queue[0].split(':')
+                # print("reset letters: "+ reset_letters[1])
+                # print("username: " + username)
+                if reset_letters[1] == username:
+                    for x in xs:
+                        x.undraw()
+            if queue[0].find('life_msg:') != -1:
+                # win.close()
+                life_msg = queue[0].split(':')
+                for x in range(1, len(client_names)-1):
+                    # print("lifemsg: " + life_msg[1] + " client: " + client_names[x])
+                    if life_msg[1] == (client_names[x]):
+                        # print("replacing " + life_msg[1] +"\'s Lives: " + life_msg[2])
+                        
+                        # lives_list[x].undraw()
+                        # lives_list[x] = 
+                        # for y in lives_list:
+                        #     y.undraw()
+                        # lives_list[x-1].setText("")
+                        # white_out = Rectangle(Point(((x-1) * 100)-20, 80), Point(((x-1)*100) +20, 60))
+                        # white_out.draw(win)
+                        gottenText = lives_list[x-1].getText()
+                        lives_list[x-1].setText("Lives: " + life_msg[2])
+                        newTxet = lives_list[x-1].getText()
+
+                        print("old text: " + gottenText + " new text: " + newTxet)
+                        # for y in lives_list:
+                        #     y.draw(win)
+                        # win.redraw()
+                        # win.redraw()
+                        # lives_list[x].draw(win)
+                        # lil_red_cross(10+23*x,530)
             queue.pop(0)
     
     
@@ -196,32 +266,79 @@ def client_program():
 def listener_thread(client_socket,):
     while(True):
         in_data = client_socket.recv(1024).decode()
-        cmd = in_data.split(';')
-        # print(cmd)
-        if (cmd[0] == '!!!client_num_name'):
-            queue.append('client_names:' + cmd[1])
+        split_msg = in_data.split('\n')
+        for msg in split_msg:
+            # print(msg + ', ')
+
+            cmd = msg.split(';')
+            # print(cmd)
+            if (cmd[0] == '!!!client_num_name'):
+                queue.append('client_names:' + cmd[1])
+                
+            if (cmd[0].find('Game has started') != -1):
+                queue.append('game start')
+                
+            if(cmd[0].find('!!!winner') != -1):
+                queue.append('winner:' + cmd[1])
+        
+            if(cmd[0].find('loses the game') != -1):
+                loser = cmd[0].split(' loses')
+                queue.append('loser:' + loser[0])
+                
+            if(cmd[0].find('Substring:') != -1):
+                # print(cmd[0])
+                substring = cmd[0].split('Substring:')
+                # player_name = cmd[0].split('\'')
+                queue.append('substr:' + substring[1])
             
-        if (cmd[0].find('Game has started') != -1):
-            queue.append('game start')
+            if (cmd[0].find('\'s turn') != -1):
+                player_name = cmd[0].split('\'')
+                queue.append('player_name:' + player_name[0])
+
+            if(cmd[0].find('used_letters:') != -1):
+                letters = cmd[0].split('used_letters:')
+                queue.append('used_letters:' + letters[1])
             
-        if(cmd[0].find('!!!winner') != -1):
-            queue.append('winner:' + cmd[1])
-       
-        if(cmd[0].find('loses the game') != -1):
-            loser = cmd[0].split(' loses')
-            queue.append('loser:' + loser[0])
-            
-        if(cmd[0].find('Substring:') != -1):
-            substring = cmd[0].split('Substring:')
-            player_name = cmd[0].split('\'')
-            queue.append('substr:' + substring[1] +':' + player_name[0])
-            
-        if(cmd[0].find('used_letters:') != -1):
-            letters = cmd[0].split('used_letters:')
-            queue.append('used_letters:' + letters[1])
-            
+            if(cmd[0].find('lives remaining') != -1):
+                life_msg = cmd[0].split(' lives remaining')
+                life_msg = life_msg[0].split(' has ')
+                print("lie msg: ", life_msg)
+                queue.append('life_msg:' + life_msg[0] + ":" + life_msg[1])
+
+            if(cmd[0].find('\'s lives increased to ') != -1):
+                reset_letters = cmd[0].split('\'s lives increased to ')
+                queue.append('reset_letters:' + reset_letters[0])
+
+                
         if in_data.find('!!!') == -1: 
             print(str(in_data))
+        # cmd = in_data.split(';')
+        # print(cmd)
+        # if (cmd[0] == '!!!client_num_name'):
+        #     queue.append('client_names:' + cmd[1])
+            
+        # if (cmd[0].find('Game has started') != -1):
+        #     queue.append('game start')
+            
+        # if(cmd[0].find('!!!winner') != -1):
+        #     queue.append('winner:' + cmd[1])
+       
+        # if(cmd[0].find('loses the game') != -1):
+        #     loser = cmd[0].split(' loses')
+        #     queue.append('loser:' + loser[0])
+            
+        # if(cmd[0].find('Substring:') != -1):
+        #     print(cmd[0])
+        #     substring = cmd[0].split('Substring:')
+        #     player_name = cmd[0].split('\'')
+        #     queue.append('substr:' + substring[1] +':' + player_name[0])
+            
+        # if(cmd[0].find('used_letters:') != -1):
+        #     letters = cmd[0].split('used_letters:')
+        #     queue.append('used_letters:' + letters[1])
+            
+        # if in_data.find('!!!') == -1: 
+        #     print(str(in_data))
 
 def messager_thread(client_socket, message):
     while (message.lower().strip() != ';;;'):

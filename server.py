@@ -15,7 +15,7 @@ global cur_client
 global players_left
 turn_event = threading.Event()
 alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v','w','x','y','z']
-# alphabet = ['e']
+# alphabet = ['e', 'a']
 # substring = generate_substring()
 
 # max_client_num = 0
@@ -207,7 +207,7 @@ def server_thread(my_client_socket, client_num, address, client_info):
                             for client in client_info:
                                 client_info[client]['conn_socket'].send((cur_client['name'] + " wins!\n").encode())
                             for client in client_info:
-                                client_info[client]['conn_socket'].send(('!!!winner;' + cur_client['name'] + " wins!").encode())
+                                client_info[client]['conn_socket'].send(('!!!winner;' + cur_client['name'] + " wins!\n").encode())
                             turn_event.set()
                             
                             for client in client_info:
@@ -231,7 +231,7 @@ def server_thread(my_client_socket, client_num, address, client_info):
                         # cur_client['conn_socket'].send((substring + "\n").encode())
                         # print(cur_client['lives'])
                         # timer = threading.Timer(8.0, lose_life, args=(cur_client,))
-                        cur_client['conn_socket'].settimeout(500)
+                        cur_client['conn_socket'].settimeout(8)
                         try:
                             while True:
                                 data = cur_client['conn_socket'].recv(1024).decode()
@@ -245,8 +245,19 @@ def server_thread(my_client_socket, client_num, address, client_info):
                                         # print(letter)
                                         if letter not in cur_client['used_letters']:
                                             cur_client['used_letters'].append(letter)
-                                    if cur_client['used_letters'] == alphabet:
+                                    print(data)
+                                    print(cur_client['used_letters'])
+                                    print(alphabet)
+
+                                    alpha_complete = True
+                                    for alpha in alphabet:
+                                        if alpha not in cur_client['used_letters']:
+                                            alpha_complete = False
+
+                                    if alpha_complete:
                                         cur_client['lives'] += 1
+                                        for client in client_info:
+                                            client_info[client]['conn_socket'].send((name + "\'s lives increased to " + str(cur_client['lives'])).encode())
                                         print(cur_client['name'] + "'s lives increased to " + str(cur_client['lives']))
                                         cur_client['used_letters'] = []
                                     letter_str = ''
@@ -275,7 +286,7 @@ def server_thread(my_client_socket, client_num, address, client_info):
                             for client in client_info:
                                 client_info[client]['conn_socket'].send((name + " has " + str(cur_client['lives']) + " lives remaining\n").encode())
                                 if cur_client['lives'] == 0:
-                                    client_info[client]['conn_socket'].send((name + " loses the game.").encode())
+                                    client_info[client]['conn_socket'].send((name + " loses the game.\n").encode())
                                     # client_info[client]['conn_socket'].send((name + " loses the game.\n").encode())
                                     remove_client_num(client_info,cur_client_num)
                                     # if (len(cur_client['players_remaining']) == 1):
@@ -302,7 +313,7 @@ def server_thread(my_client_socket, client_num, address, client_info):
             elif data[0:10] == 'Username: ':
                 continue
             else:
-                my_client_socket.send(('Not a valid command').encode())        
+                my_client_socket.send(('Not a valid command\n').encode())        
     my_client_socket.close()    
 
 def server_program():
