@@ -239,7 +239,7 @@ def client_program():
                         lives_list[x-1].setText("Lives: " + life_msg[2])
                         newTxet = lives_list[x-1].getText()
 
-                        print("old text: " + gottenText + " new text: " + newTxet)
+                        # print("old text: " + gottenText + " new text: " + newTxet)
                         # for y in lives_list:
                         #     y.draw(win)
                         # win.redraw()
@@ -302,7 +302,7 @@ def listener_thread(client_socket,):
             if(cmd[0].find('lives remaining') != -1):
                 life_msg = cmd[0].split(' lives remaining')
                 life_msg = life_msg[0].split(' has ')
-                print("lie msg: ", life_msg)
+                # print("lie msg: ", life_msg)
                 queue.append('life_msg:' + life_msg[0] + ":" + life_msg[1])
 
             if(cmd[0].find('\'s lives increased to ') != -1):
