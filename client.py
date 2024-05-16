@@ -109,7 +109,7 @@ def client_program():
                 # print('adding names\n')
                 # i = 1
                 for i in range(1, len(client_names) - 1):
-                    print("i is", i);                    
+                    # print("i is", i);                    
                     g_name = Text(Point((i * 100), 100), client_names[i])
                     g_name.draw(win)
                     lives = Text(Point((i * 100), 70), 'Lives: 3')
@@ -215,7 +215,7 @@ def client_program():
 
             if queue[0].find('reset_letters:') != -1:
                 reset_letters = queue[0].split(':')
-                print("reset letters: ", reset_letters)
+                # print("reset letters: ", reset_letters)
                 # print("username: " + username)
                 if reset_letters[1] == username:
                     for x in xs:
@@ -229,9 +229,9 @@ def client_program():
                 for x in range(1, len(client_names)-1):
                     # print("lifemsg: " + life_msg[1] + " client: " + client_names[x])
                     if life_msg[1] == (client_names[x]):
-                        print("replacing " + life_msg[1] +"\'s Lives: " + life_msg[2])
-                        print(lives_list[x-1].getText())
-                        print(lives_list)
+                        # print("replacing " + life_msg[1] +"\'s Lives: " + life_msg[2])
+                        # print(lives_list[x-1].getText())
+                        # print(lives_list)
                         lives_list[x-1].setText("Lives: " + life_msg[2])
                         # lives_list[x].undraw()
                         # lives_list[x] = 

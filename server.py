@@ -15,7 +15,7 @@ global cur_client
 global players_left
 turn_event = threading.Event()
 alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v','w','x','y','z']
-alphabet = ['e', 'a']
+alphabet = ['e', 'a', 'i', 'o', 'u']
 # substring = generate_substring()
 
 # max_client_num = 0
@@ -307,8 +307,8 @@ def server_thread(my_client_socket, client_num, address, client_info):
                                     client_info[client]['cur_player'] += 1
                                 if client_info[client]['cur_player'] > len(client_info):
                                     client_info[client]['cur_player'] = 1
-                                # while client_info[client]['cur_player'] <= len(client_info) and client_info[client]['cur_player'] not in client_info[client]['players_remaining']:
-                                #     client_info[client]['cur_player'] += 1
+                                while client_info[client]['cur_player'] <= len(client_info) and client_info[client]['cur_player'] not in client_info[client]['players_remaining']:
+                                    client_info[client]['cur_player'] += 1
                         print("cur_client_num: " + str(client_info[client]['cur_player']))
                         turn_event.set()
                     else:
