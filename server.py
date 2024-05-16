@@ -15,7 +15,7 @@ global cur_client
 global players_left
 turn_event = threading.Event()
 alphabet = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v','w','x','y','z']
-# alphabet = ['e', 'a']
+alphabet = ['e', 'a']
 # substring = generate_substring()
 
 # max_client_num = 0
@@ -111,7 +111,12 @@ def Convert(str):
 
 def generate_substring():
     random_word = random.choice(dictList)
-    start_index = random.randint(0, len(random_word)-3)
+    if (len(random_word) < 3):
+        return random_word
+    if (len(random_word) == 3):
+        start_index = 0
+    else:
+        start_index = random.randint(0, len(random_word)-3)
     end_index = start_index + random.randint(2, 3)
     random_substring = random_word[start_index:end_index]
     return random_substring
@@ -257,13 +262,13 @@ def server_thread(my_client_socket, client_num, address, client_info):
                                     if alpha_complete:
                                         cur_client['lives'] += 1
                                         for client in client_info:
-                                            client_info[client]['conn_socket'].send((name + "\'s lives increased to " + str(cur_client['lives'])).encode())
+                                            client_info[client]['conn_socket'].send((name + "\'s lives increased to " + str(cur_client['lives']) +'\n').encode())
                                         print(cur_client['name'] + "'s lives increased to " + str(cur_client['lives']))
                                         cur_client['used_letters'] = []
                                     letter_str = ''
                                     for letter in cur_client['used_letters']:
                                         letter_str += letter
-                                    cur_client['conn_socket'].send(('!!!used_letters: ' + letter_str +':\n').encode())
+                                    cur_client['conn_socket'].send(('!!!used_letters: ' + letter_str +'\n').encode())
 
                                     break
                                 else:

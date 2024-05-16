@@ -104,12 +104,12 @@ def client_program():
             if queue[0].find('client_names:') != -1:
                 
                 client_names = queue[0].split(':')
+                lives_list.clear()
                 # print(str(client_names))
                 # print('adding names\n')
                 # i = 1
                 for i in range(1, len(client_names) - 1):
-                    
-                    
+                    print("i is", i);                    
                     g_name = Text(Point((i * 100), 100), client_names[i])
                     g_name.draw(win)
                     lives = Text(Point((i * 100), 70), 'Lives: 3')
@@ -215,19 +215,24 @@ def client_program():
 
             if queue[0].find('reset_letters:') != -1:
                 reset_letters = queue[0].split(':')
-                # print("reset letters: "+ reset_letters[1])
+                print("reset letters: ", reset_letters)
                 # print("username: " + username)
                 if reset_letters[1] == username:
                     for x in xs:
                         x.undraw()
+                for x in range(1, len(client_names)-1):
+                    if client_names[x] == reset_letters[1]:
+                        lives_list[x-1].setText("Lives: " + reset_letters[2])
             if queue[0].find('life_msg:') != -1:
                 # win.close()
                 life_msg = queue[0].split(':')
                 for x in range(1, len(client_names)-1):
                     # print("lifemsg: " + life_msg[1] + " client: " + client_names[x])
                     if life_msg[1] == (client_names[x]):
-                        # print("replacing " + life_msg[1] +"\'s Lives: " + life_msg[2])
-                        
+                        print("replacing " + life_msg[1] +"\'s Lives: " + life_msg[2])
+                        print(lives_list[x-1].getText())
+                        print(lives_list)
+                        lives_list[x-1].setText("Lives: " + life_msg[2])
                         # lives_list[x].undraw()
                         # lives_list[x] = 
                         # for y in lives_list:
@@ -235,9 +240,9 @@ def client_program():
                         # lives_list[x-1].setText("")
                         # white_out = Rectangle(Point(((x-1) * 100)-20, 80), Point(((x-1)*100) +20, 60))
                         # white_out.draw(win)
-                        gottenText = lives_list[x-1].getText()
-                        lives_list[x-1].setText("Lives: " + life_msg[2])
-                        newTxet = lives_list[x-1].getText()
+                        # gottenText = lives_list[x-1].getText()
+                        # lives_list[x-1].setText("Lives: " + life_msg[2])
+                        # newTxet = lives_list[x-1].getText()
 
                         # print("old text: " + gottenText + " new text: " + newTxet)
                         # for y in lives_list:
@@ -307,7 +312,7 @@ def listener_thread(client_socket,):
 
             if(cmd[0].find('\'s lives increased to ') != -1):
                 reset_letters = cmd[0].split('\'s lives increased to ')
-                queue.append('reset_letters:' + reset_letters[0])
+                queue.append('reset_letters:' + reset_letters[0] + ":" + reset_letters[1])
 
                 
         if in_data.find('!!!') == -1: 
